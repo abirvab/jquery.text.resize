@@ -1,32 +1,95 @@
+/// <reference path="../libs/jquery-1.8.3.js" />
 ; (function ($) {
 
     $.fn.TextSize = function (settings) {
         var THIS = this;
         var init = function () {
-
-            $(THIS).children("*").each(function (id, data) {
+            $($(THIS)[0].tagName + " *").each(function (id, data) {
                 if (!$(data).is(settings.OutOfScope)) {
                     var pixels = parseInt($(data).css("font-size").substring(0, $(data).css("font-size").length - 2));
                     $(data).attr("data-font-size", pixels);
                 }
-            });
-        };
-        $("a[data-text-size-change]").each(function (id, data) {
-            $(data).click(function (event) {
-                event.preventDefault();
-                var changedPercent = parseInt($(data).attr("data-text-size-change"));
-                $(THIS).children("*").each(function (id, data2) {
-                    if (!$(data).is(settings.OutOfScope)) {
-                        var pixels = parseInt($(data2).attr("data-font-size"));
-                        $(data2).css("font-size", pixels * (changedPercent / 100) + "px");
-                    }
-                });
-                return false;
-            });
-        });
-        init();
-        return this;
 
+            });
+            var changedPercent = loadStoredData("textsizepercent");
+            resizeText(changedPercent);
+            $("a[data-text-size-change]").removeClass("active");
+            $("a[data-text-size-change=" + changedPercent + "]").addClass("active");
+        };
+        var storeData = function (type, obj) {
+            var data = obj;
+
+            // If using a modern browser, lets use localStorage and avoid the overhead
+            // of a cookie
+            if (typeof localStorage != 'undefined' && localStorage !== null) {
+                localStorage[type] = data;
+            }
+
+                // Otherwise we need to store data in a cookie, not quite so eloquent.
+            else {
+                jQuery.cookie(type, data, { expires: 365, path: '/' });
+            }
+        };
+        var loadStoredData = function (type) {
+            var data;
+
+            // If using localStorage, retrieve from there
+            if (typeof localStorage != 'undefined' && localStorage !== null) {
+                data = localStorage[type];
+            }
+
+                // Otherwise we have to use cookie based storage
+            else {
+                data = jQuery.cookie(type);
+            }
+
+            // If we have data, lets turn it into an object, otherwise return false
+            if (data) {
+                return parseInt(data);
+            }
+            return 100;
+        };
+        var resizeText = function (changedPercent) {
+            $($(THIS)[0].tagName + " *").each(function (id, data2) {
+                if (!$(data2).is(settings.OutOfScope)) {
+                    if (changedPercent != 100) {
+                        var pixels = parseInt($(data2).attr("data-font-size"));
+                        $(data2).css("font-size", (pixels * (changedPercent / 100)) | 0 + "px");
+                    }
+                    else {
+                        $(data2).css("font-size", "initial");
+                        var str = $(data2).attr("style");
+                        try{
+                            if (str.search("font-size") != -1) {
+                                str = str.replace(/font-size:/i , "");
+                                str = str.replace(/initial;/i , "");
+                               
+                            }
+                            $(data2).attr("style", str);
+                        }catch(e){
+
+                        }
+                    }
+                }
+            
+            });
     };
+    $("a[data-text-size-change]").each(function (id, data) {
+        $(data).click(function (event) {
+            event.preventDefault();
+            var changedPercent = parseInt($(this).attr("data-text-size-change"));
+            resizeText(changedPercent);
+            storeData("textsizepercent", changedPercent);
+            $("a[data-text-size-change]").removeClass("active");
+            $("a[data-text-size-change=" + changedPercent + "]").addClass("active");
+
+            return false;
+        });
+    });
+
+    init();
+    return this;
+
+};
 
 }(jQuery));
