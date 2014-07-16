@@ -4,17 +4,22 @@
     $.fn.TextSize = function (settings) {
         var THIS = this;
         var init = function () {
-            $($(THIS)[0].tagName + " *").each(function (id, data) {
-                if (!$(data).is(settings.OutOfScope)) {
-                    var pixels = parseInt($(data).css("font-size").substring(0, $(data).css("font-size").length - 2));
-                    $(data).attr("data-font-size", pixels);
-                }
-
-            });
+            addDataFontSize();
             var changedPercent = loadStoredData("textsizepercent");
             resizeText(changedPercent);
             $("a[data-text-size-change]").removeClass("active");
             $("a[data-text-size-change=" + changedPercent + "]").addClass("active");
+        };
+        var addDataFontSize = function () {
+            $($(THIS)[0].tagName + " *").each(function (id, data) {
+                if (!$(data).is(settings.OutOfScope)) {
+                    if (!$(data).is("[data-font-size]")) {
+                        var pixels = parseInt($(data).css("font-size").substring(0, $(data).css("font-size").length - 2));
+                        $(data).attr("data-font-size", pixels);
+                    }
+                }
+
+            });
         };
         var storeData = function (type, obj) {
             var data = obj;
@@ -50,6 +55,7 @@
             return 100;
         };
         var resizeText = function (changedPercent) {
+            addDataFontSize();
             $($(THIS)[0].tagName + " *").each(function (id, data2) {
                 if (!$(data2).is(settings.OutOfScope)) {
                     if (changedPercent != 100) {
@@ -59,37 +65,37 @@
                     else {
                         $(data2).css("font-size", "initial");
                         var str = $(data2).attr("style");
-                        try{
+                        try {
                             if (str.search("font-size") != -1) {
-                                str = str.replace(/font-size:/i , "");
-                                str = str.replace(/initial;/i , "");
-                               
+                                str = str.replace(/font-size:/i, "");
+                                str = str.replace(/initial;/i, "");
+
                             }
                             $(data2).attr("style", str);
-                        }catch(e){
+                        } catch (e) {
 
                         }
                     }
                 }
-            
+
             });
-    };
-    $("a[data-text-size-change]").each(function (id, data) {
-        $(data).click(function (event) {
-            event.preventDefault();
-            var changedPercent = parseInt($(this).attr("data-text-size-change"));
-            resizeText(changedPercent);
-            storeData("textsizepercent", changedPercent);
-            $("a[data-text-size-change]").removeClass("active");
-            $("a[data-text-size-change=" + changedPercent + "]").addClass("active");
+        };
+        $("a[data-text-size-change]").each(function (id, data) {
+            $(data).click(function (event) {
+                event.preventDefault();
+                var changedPercent = parseInt($(this).attr("data-text-size-change"));
+                resizeText(changedPercent);
+                storeData("textsizepercent", changedPercent);
+                $("a[data-text-size-change]").removeClass("active");
+                $("a[data-text-size-change=" + changedPercent + "]").addClass("active");
 
-            return false;
+                return false;
+            });
         });
-    });
 
-    init();
-    return this;
+        init();
+        return this;
 
-};
+    };
 
 }(jQuery));
